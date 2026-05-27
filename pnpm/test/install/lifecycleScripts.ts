@@ -39,6 +39,25 @@ test('lifecycle script runs with the correct user agent', () => {
   const expectedUserAgentPrefix = `${pnpmPkg.name}/${pnpmPkg.version} `
   expect(result.stdout.toString()).toContain(expectedUserAgentPrefix)
 })
+test.each([true, false])('lifecycle script runs with the correct user agent with dependencies (lockfile exists = %s)', (lockfileExists) => {
+  prepare({
+    scripts: {
+      preinstall: 'node --eval "console.log(process.env.npm_config_user_agent)"',
+    },
+    dependencies: {
+      'is-positive': '1.0.0',
+    },
+  })
+  if (lockfileExists) {
+    execPnpmSync(['install', '--lockfile-only'])
+  }
+  const result = execPnpmSync(['install'], {expectSuccess: true})
+
+  expect(result.status).toBe(0)
+  const expectedUserAgentPrefix = `${pnpmPkg.name}/${pnpmPkg.version} `
+  expect(result.stdout.toString()).toContain(expectedUserAgentPrefix)
+})
+
 
 test('preinstall is executed before general installation', () => {
   prepare({
